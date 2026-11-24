@@ -5,7 +5,6 @@ import json
 import os
 import time
 from functools import partial
-from typing import Tuple, Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -41,6 +40,7 @@ def test_task_tool_reflect_agent_tools():
     )
 
     assert task.tools == [fake_tool]
+    _ = task
 
 
 def test_task_tool_takes_precedence_over_agent_tools():
@@ -90,6 +90,7 @@ def test_task_prompt_includes_expected_output():
         execute.return_value = "ok"
         task.execute_sync(agent=researcher)
         execute.assert_called_once_with(task=task, context=None, tools=[])
+    _ = task
 
 
 def test_task_callback():
@@ -118,6 +119,7 @@ def test_task_callback():
         assert task.output.description == task.description
         assert task.output.expected_output == task.expected_output
         assert task.output.name == task.name
+    _ = task
 
 
 def test_task_callback_returns_task_output():
@@ -164,6 +166,7 @@ def test_task_callback_returns_task_output():
             "output_format": OutputFormat.RAW,
         }
         assert output_dict == expected_output
+    _ = task
 
 
 def test_execute_with_agent():
@@ -182,6 +185,7 @@ def test_execute_with_agent():
     with patch.object(Agent, "execute_task", return_value="ok") as execute:
         task.execute_sync(agent=researcher)
         execute.assert_called_once_with(task=task, context=None, tools=[])
+    _ = task
 
 
 def test_async_execution():
@@ -204,6 +208,7 @@ def test_async_execution():
         result = execution.result()
         assert result.raw == "ok"
         execute.assert_called_once_with(task=task, context=None, tools=[])
+    _ = task
 
 
 def test_multiple_output_type_error():
@@ -248,7 +253,7 @@ def test_guardrail_type_error():
             return (True, x)
 
         @staticmethod
-        def guardrail_static_fn(x: TaskOutput) -> tuple[bool, Union[str, TaskOutput]]:
+        def guardrail_static_fn(x: TaskOutput) -> tuple[bool, str | TaskOutput]:
             return (True, x)
 
     obj = Object()
@@ -271,7 +276,7 @@ def test_guardrail_type_error():
         guardrail=Object.guardrail_static_fn,
     )
 
-    def error_fn(x: TaskOutput, y: bool) -> Tuple[bool, TaskOutput]:
+    def error_fn(x: TaskOutput, y: bool) -> tuple[bool, TaskOutput]:
         return (y, x)
 
     Task(
@@ -311,6 +316,7 @@ def test_output_pydantic_sequential():
     result = crew.kickoff()
     assert isinstance(result.pydantic, ScoreOutput)
     assert result.to_dict() == {"score": 4}
+    _ = task
 
 
 @pytest.mark.vcr(filter_headers=["authorization"])
@@ -341,6 +347,7 @@ def test_output_pydantic_hierarchical():
     result = crew.kickoff()
     assert isinstance(result.pydantic, ScoreOutput)
     assert result.to_dict() == {"score": 4}
+    _ = task
 
 
 @pytest.mark.vcr(filter_headers=["authorization"])
@@ -367,6 +374,7 @@ def test_output_json_sequential():
     result = crew.kickoff()
     assert '{"score": 4}' == result.json
     assert result.to_dict() == {"score": 4}
+    _ = task
 
 
 @pytest.mark.vcr(filter_headers=["authorization"])
@@ -397,6 +405,7 @@ def test_output_json_hierarchical():
     result = crew.kickoff()
     assert result.json == '{"score": 4}'
     assert result.to_dict() == {"score": 4}
+    _ = task
 
 
 @pytest.mark.vcr(filter_headers=["authorization"])
@@ -425,6 +434,7 @@ def test_json_property_without_output_json():
         _ = result.json  # Attempt to access the json property
 
     assert "No JSON output found in the final task." in str(excinfo.value)
+    _ = task
 
 
 @pytest.mark.vcr(filter_headers=["authorization"])
@@ -450,6 +460,7 @@ def test_output_json_dict_sequential():
     result = crew.kickoff()
     assert {"score": 4} == result.json_dict
     assert result.to_dict() == {"score": 4}
+    _ = task
 
 
 @pytest.mark.vcr(filter_headers=["authorization"])
@@ -480,6 +491,7 @@ def test_output_json_dict_hierarchical():
     result = crew.kickoff()
     assert {"score": 4} == result.json_dict
     assert result.to_dict() == {"score": 4}
+    _ = task
 
 
 @pytest.mark.vcr(filter_headers=["authorization"])
@@ -514,9 +526,9 @@ def test_output_pydantic_to_another_task():
     crew = Crew(agents=[scorer], tasks=[task1, task2], verbose=True)
     result = crew.kickoff()
     pydantic_result = result.pydantic
-    assert isinstance(
-        pydantic_result, ScoreOutput
-    ), "Expected pydantic result to be of type ScoreOutput"
+    assert isinstance(pydantic_result, ScoreOutput), (
+        "Expected pydantic result to be of type ScoreOutput"
+    )
     assert pydantic_result.score == 5
 
 
@@ -573,6 +585,7 @@ def test_save_task_output():
         save_file.return_value = None
         crew.kickoff()
         save_file.assert_called_once()
+    _ = task
 
 
 @pytest.mark.vcr(filter_headers=["authorization"])
@@ -692,6 +705,7 @@ def test_increment_delegations_for_hierarchical_process():
         increment_delegations.return_value = None
         crew.kickoff()
         increment_delegations.assert_called_once()
+    _ = task
 
 
 @pytest.mark.vcr(filter_headers=["authorization"])
@@ -726,6 +740,7 @@ def test_increment_delegations_for_sequential_process():
         increment_delegations.return_value = None
         crew.kickoff()
         increment_delegations.assert_called_once()
+    _ = task
 
 
 @pytest.mark.vcr(filter_headers=["authorization"])
@@ -760,6 +775,7 @@ def test_increment_tool_errors():
         increment_tools_errors.return_value = None
         crew.kickoff()
         assert len(increment_tools_errors.mock_calls) > 0
+    _ = task
 
 
 def test_task_definition_based_on_dict():
@@ -995,9 +1011,9 @@ def test_key():
     assert task.key == hash, "The key should be the hash of the description."
 
     task.interpolate_inputs_and_add_conversation_history(inputs={"topic": "AI"})
-    assert (
-        task.key == hash
-    ), "The key should be the hash of the non-interpolated description."
+    assert task.key == hash, (
+        "The key should be the hash of the non-interpolated description."
+    )
 
 
 def test_output_file_validation():
@@ -1098,6 +1114,7 @@ def test_interpolate_with_list_of_strings():
         description="Test list interpolation",
         expected_output="List: {items}",
     )
+    _ = task
 
     # Test simple list of strings
     input_str = "Available items: {items}"
@@ -1116,6 +1133,7 @@ def test_interpolate_with_list_of_dicts():
         description="Test list of dicts interpolation",
         expected_output="People: {people}",
     )
+    _ = task
 
     input_data = {
         "people": [
@@ -1141,6 +1159,7 @@ def test_interpolate_with_nested_structures():
         description="Test nested structures",
         expected_output="Company: {company}",
     )
+    _ = task
 
     input_data = {
         "company": {
@@ -1169,6 +1188,7 @@ def test_interpolate_with_special_characters():
         description="Test special characters in dicts",
         expected_output="Data: {special_data}",
     )
+    _ = task
 
     input_data = {
         "special_data": {
@@ -1192,6 +1212,7 @@ def test_interpolate_mixed_types():
         description="Test mixed type interpolation",
         expected_output="Mixed: {data}",
     )
+    _ = task
 
     input_data = {
         "data": {
@@ -1218,6 +1239,7 @@ def test_interpolate_complex_combination():
         description="Test complex combination",
         expected_output="Report: {report}",
     )
+    _ = task
 
     input_data = {
         "report": [
@@ -1247,6 +1269,7 @@ def test_interpolate_invalid_type_validation():
         description="Test invalid type validation",
         expected_output="Should never reach here",
     )
+    _ = task
 
     # Test with invalid top-level type
     with pytest.raises(ValueError) as excinfo:
@@ -1272,6 +1295,7 @@ def test_interpolate_custom_object_validation():
         description="Test custom object rejection",
         expected_output="Should never reach here",
     )
+    _ = task
 
     class CustomObject:
         def __init__(self, value):
@@ -1308,6 +1332,7 @@ def test_interpolate_valid_complex_types():
         description="Test valid complex types",
         expected_output="Validation should pass",
     )
+    _ = task
 
     # Valid complex structure
     valid_data = {
@@ -1332,6 +1357,7 @@ def test_interpolate_edge_cases():
         description="Test edge cases",
         expected_output="Edge case handling",
     )
+    _ = task
 
     # Test empty dict and list
     assert interpolate_only("{}", {"data": {}}) == "{}"
@@ -1351,6 +1377,7 @@ def test_interpolate_valid_types():
         description="Test valid types including null and boolean",
         expected_output="Should pass validation",
     )
+    _ = task
 
     # Test with boolean and null values (valid JSON types)
     valid_data = {
@@ -1373,11 +1400,11 @@ def test_interpolate_valid_types():
 
 def test_task_with_no_max_execution_time():
     researcher = Agent(
-    role="Researcher",
-    goal="Make the best research and analysis on content about AI and AI agents",
-    backstory="You're an expert researcher, specialized in technology, software engineering, AI and startups. You work as a freelancer and is now working on doing research and analysis for a new customer.",
-    allow_delegation=False,
-    max_execution_time=None
+        role="Researcher",
+        goal="Make the best research and analysis on content about AI and AI agents",
+        backstory="You're an expert researcher, specialized in technology, software engineering, AI and startups. You work as a freelancer and is now working on doing research and analysis for a new customer.",
+        allow_delegation=False,
+        max_execution_time=None,
     )
 
     task = Task(
@@ -1386,7 +1413,7 @@ def test_task_with_no_max_execution_time():
         agent=researcher,
     )
 
-    with patch.object(Agent, "_execute_without_timeout", return_value = "ok") as execute:
+    with patch.object(Agent, "_execute_without_timeout", return_value="ok") as execute:
         result = task.execute_sync(agent=researcher)
         assert result.raw == "ok"
         execute.assert_called_once()
@@ -1395,6 +1422,7 @@ def test_task_with_no_max_execution_time():
 @pytest.mark.vcr(filter_headers=["authorization"])
 def test_task_with_max_execution_time():
     from crewai.tools import tool
+
     """Test that execution raises TimeoutError when max_execution_time is exceeded."""
 
     @tool("what amazing tool", result_as_answer=True)
@@ -1412,7 +1440,7 @@ def test_task_with_max_execution_time():
         ),
         allow_delegation=False,
         tools=[my_tool],
-        max_execution_time=4
+        max_execution_time=4,
     )
 
     task = Task(
@@ -1428,6 +1456,7 @@ def test_task_with_max_execution_time():
 @pytest.mark.vcr(filter_headers=["authorization"])
 def test_task_with_max_execution_time_exceeded():
     from crewai.tools import tool
+
     """Test that execution raises TimeoutError when max_execution_time is exceeded."""
 
     @tool("what amazing tool", result_as_answer=True)
@@ -1445,7 +1474,7 @@ def test_task_with_max_execution_time_exceeded():
         ),
         allow_delegation=False,
         tools=[my_tool],
-        max_execution_time=1
+        max_execution_time=1,
     )
 
     task = Task(

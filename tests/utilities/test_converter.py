@@ -1,5 +1,4 @@
 import json
-import os
 from typing import Dict, List, Optional
 from unittest.mock import MagicMock, Mock, patch
 
@@ -85,14 +84,12 @@ def test_convert_to_model_with_invalid_json():
     result = '{"name": "John", "age": "thirty"}'
     with patch("crewai.utilities.converter.handle_partial_json") as mock_handle:
         mock_handle.return_value = "Fallback result"
-        output = convert_to_model(result, SimpleModel, None, None)
-        assert output == "Fallback result"
+        assert convert_to_model(result, SimpleModel, None, None) == "Fallback result"
 
 
 def test_convert_to_model_with_no_model():
     result = "Plain text"
-    output = convert_to_model(result, None, None, None)
-    assert output == "Plain text"
+    assert convert_to_model(result, None, None, None) == "Plain text"
 
 
 def test_convert_to_model_with_special_characters():
@@ -115,6 +112,9 @@ def test_convert_to_model_with_special_characters():
 
 
 def test_convert_to_model_with_escaped_special_characters():
+
+
+def test_convert_to_model_with_escaped_special_characters():
     json_string_test = json.dumps(
         {
             "responses": [
@@ -134,6 +134,7 @@ def test_convert_to_model_with_escaped_special_characters():
 
 
 def test_convert_to_model_with_multiple_special_characters():
+    pass
     json_string_test = """
     {
         "responses": [
@@ -152,6 +153,9 @@ def test_convert_to_model_with_multiple_special_characters():
     )
 
 
+def test_validate_model_pydantic_output():
+
+
 # Tests for validate_model
 def test_validate_model_pydantic_output():
     result = '{"name": "Alice", "age": 25}'
@@ -162,10 +166,16 @@ def test_validate_model_pydantic_output():
 
 
 def test_validate_model_json_output():
+
+
+def test_validate_model_json_output():
     result = '{"name": "Bob", "age": 40}'
     output = validate_model(result, SimpleModel, True)
     assert isinstance(output, dict)
     assert output == {"name": "Bob", "age": 40}
+
+
+def test_handle_partial_json_with_valid_partial():
 
 
 # Tests for handle_partial_json
@@ -178,11 +188,13 @@ def test_handle_partial_json_with_valid_partial():
 
 
 def test_handle_partial_json_with_invalid_partial(mock_agent):
+
+
+def test_handle_partial_json_with_invalid_partial(mock_agent):
     result = "No valid JSON here"
     with patch("crewai.utilities.converter.convert_with_instructions") as mock_convert:
         mock_convert.return_value = "Converted result"
-        output = handle_partial_json(result, SimpleModel, False, mock_agent)
-        assert output == "Converted result"
+        assert handle_partial_json(result, SimpleModel, False, mock_agent) == "Converted result"
 
 
 # Tests for convert_with_instructions
@@ -206,6 +218,10 @@ def test_convert_with_instructions_success(
 
 @patch("crewai.utilities.converter.create_converter")
 @patch("crewai.utilities.converter.get_conversion_instructions")
+
+
+@patch("crewai.utilities.converter.create_converter")
+@patch("crewai.utilities.converter.get_conversion_instructions")
 def test_convert_with_instructions_failure(
     mock_get_instructions, mock_create_converter, mock_agent
 ):
@@ -216,8 +232,7 @@ def test_convert_with_instructions_failure(
 
     result = "Some text to convert"
     with patch("crewai.utilities.converter.Printer") as mock_printer:
-        output = convert_with_instructions(result, SimpleModel, False, mock_agent)
-        assert output == result
+        assert convert_with_instructions(result, SimpleModel, False, mock_agent) == result
         mock_printer.return_value.print.assert_called_once()
 
 
@@ -238,11 +253,17 @@ def test_get_conversion_instructions_gpt():
 
 
 def test_get_conversion_instructions_non_gpt():
+
+
+def test_get_conversion_instructions_non_gpt():
     llm = LLM(model="ollama/llama3.1", base_url="http://localhost:11434")
     with patch.object(LLM, "supports_function_calling", return_value=False):
         instructions = get_conversion_instructions(SimpleModel, llm)
         assert '"name": str' in instructions
         assert '"age": int' in instructions
+
+
+def test_supports_function_calling_true():
 
 
 # Tests for is_gpt
@@ -431,7 +452,7 @@ def test_converter_error_handling():
     )
 
     with pytest.raises(ConverterError) as exc_info:
-        output = converter.to_pydantic()
+        converter.to_pydantic()
 
     assert "Failed to convert text into a Pydantic model" in str(exc_info.value)
 
@@ -516,7 +537,6 @@ def test_converter_with_list_field():
 
 
 # Tests for enums
-from enum import Enum
 
 
 def test_converter_with_enum():
@@ -565,7 +585,7 @@ def test_converter_with_ambiguous_input():
     )
 
     with pytest.raises(ConverterError) as exc_info:
-        output = converter.to_pydantic()
+        converter.to_pydantic()
 
     assert "failed to convert text into a pydantic model" in str(exc_info.value).lower()
 
